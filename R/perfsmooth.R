@@ -60,7 +60,7 @@ perfsmooth <- function(x, y, N, maxdegree = 5, xinterval = c(0,1))
 
   ## We could actually supply a gradient function for this optimization, but we'll
   ## wait to see if we really need it before we go down that road.
-  rslt <- optim(initguess, opttarg, control=list(maxit=2500))
+  rslt <- stats::optim(initguess, opttarg, control=list(maxit=2500))
 
   if(rslt$convergence != 0) {
     warning('Convergence failed with code ', rslt$convergence,

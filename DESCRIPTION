@@ -1,15 +1,22 @@
 Package: perfsmooth
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Fit smooth, monotonic curve to performance data
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Authors@R: 
+    person(given = "Robert",
+           family = "Link",
+           role = c("aut", "cre", "ard"),
+           email = "rl8z@virginia.edu",
+           comment = c(ORCID = "0000-0002-7071-248X"))
+Description: Given a set of empirical estimates of an algorithm's performance
+    (e.g., something like false negative rate) as a function of some measure
+    of sensitivity, estimate a performance curve that enforces the constraint
+    that performance decreases as a function of sensitivity.
+License: GPL-2
 Encoding: UTF-8
 LazyData: true
 Suggests: 
+    ggplot2 (>= 3.0.0),
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 RoxygenNote: 7.1.1

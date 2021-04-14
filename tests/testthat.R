@@ -1,4 +1,4 @@
 library(testthat)
-library(rocsmooth)
+library(perfsmooth)
 
-test_check("rocsmooth")
+test_check("perfsmooth")

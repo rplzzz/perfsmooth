@@ -34,6 +34,7 @@ lserieseval <- function(x, lc, interval)
 #' @keywords internal
 lpolycoef <- function(lc)
 {
+  legendrecoef <- perfsmooth::legendrecoef
   ## Pad coefficients, if necessary
   if (length(lc) < ncol(legendrecoef)) {
     lc <- c(lc, rep(0, ncol(legendrecoef)-length(lc)))
