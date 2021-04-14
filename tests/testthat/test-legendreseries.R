@@ -35,3 +35,21 @@ test_that('Excess coefficients generate a warning', {
   expect_warning({y <- lserieseval(x, lce)}, regexp = 'Excess will be dropped')
   expect_equal(y, lserieseval(x,lc))
 })
+
+test_that('Min/max derivatives of Legendre series are calculated correctly.', {
+  ## Easy case
+  lc <- c(0,1,0,1)
+  expect_equal(legendrederiv_extrema(lc), c(-1/2, 7))
+
+  lc <- c(0, 3.38, 0, 3.5025, 0, 1)
+
+  ## Monotonic, but just barely misses having a sign reversal.  This tests the
+  ## case where the imaginary roots slip through and get evaluated.
+  lc <- c(0, 3.38, 0, 3.501, 0, 1)
+  expect_equal(legendrederiv_extrema(lc), c(0.0035, 39.3860))
+
+
+  ## Check the case where we have all 11 basis functions in use
+  lc <- rep(1,11)
+  expect_equal(legendrederiv_extrema(lc), c(-30, 220))
+})

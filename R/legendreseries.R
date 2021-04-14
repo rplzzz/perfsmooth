@@ -23,6 +23,17 @@ lserieseval <- function(x, lc, interval)
     x <- (x-interval[1])*S - 1
   }
 
+  am <- lpolycoef(lc)
+
+  polysumeval(x, am)
+}
+
+#' Scale Legendre polynomials by the coefficients of a Legendre series
+#'
+#' @param lc Coefficients of the Legendre series
+#' @keywords internal
+lpolycoef <- function(lc)
+{
   ## Pad coefficients, if necessary
   if (length(lc) < ncol(legendrecoef)) {
     lc <- c(lc, rep(0, ncol(legendrecoef)-length(lc)))
@@ -33,7 +44,46 @@ lserieseval <- function(x, lc, interval)
     lc <- lc[seq(1,ncol(legendrecoef))]
   }
 
-  am <- legendrecoef * rep(lc, rep(nrow(legendrecoef), length(lc)))
+  ## Scale the coefficients of each polynomial by the coefficient corresponding
+  ## to that polynomial.
+  legendrecoef * rep(lc, rep(nrow(legendrecoef), length(lc)))
+}
 
-  polysumeval(x, am)
+
+#' Find the extrema of the derivative of a Legendre series
+#'
+#' Find the min and max values, over the interval [-1,1] of a Legendre series,
+#' given the coefficients of the series.
+#'
+#' We find these values by finding the real zeros of the second derivative of
+#' the series and evaluating the first derivative at those points, plus the
+#' end points of the interval.
+#'
+#' @param lc Coefficients of the Legendre series
+#' @return Vector with the minimum and maximum value of the derivative, in that
+#' order
+#' @keywords internal
+legendrederiv_extrema <- function(lc)
+{
+  am <- lpolycoef(lc)
+  a <- apply(am, 1, sum)
+
+  ## First derivative
+  ad1 <- a[2:length(a)]
+  ad1 <- ad1 * seq_along(ad1)
+
+  ## second derivative
+  ad2 <- ad1[2:length(ad1)]
+  ad2 <- ad2 * seq_along(ad2)
+
+  ad2roots <- polyroot(ad2)
+
+  ## We only want the real roots, but there is no harm in evaluating some that have
+  ## small but slightly nonzero values.
+  ad2roots <- ad2roots[abs(Im(ad2roots)) < 0.1 & Re(ad2roots) > -1 & Re(ad2roots) < 1]
+  x <- c(-1,1, Re(ad2roots))
+
+  d1 <- polyeval(x, ad1)
+
+  c(min(d1), max(d1))
 }

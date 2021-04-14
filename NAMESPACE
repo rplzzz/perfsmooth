@@ -3,3 +3,4 @@
 export(lserieseval)
 export(polyeval)
 export(polysumeval)
+export(rocsmooth)
