@@ -1,0 +1,118 @@
+---
+title: "Perfsmooth demonstration"
+output: html_notebook
+---
+
+```{r setup}
+library(ggplot2)
+library(perfsmooth)
+```
+
+First, we'll set up a test dataset to use with the algorithm.  Here are the simulated
+PPV measurements we'll be using, along with their error bars.
+
+```{r}
+  x <- seq(0.01,1, 0.1)
+  N <- round(250*x)
+  f0 <- function(x) {-0.6 * x^2 + 0.8}
+  p0 <- f0(x)
+  set.seed(867-5309)
+  p <- rbinom(length(N), N, p0) / N
+  
+  alpha <- p*N + 1
+  beta <- N+2-alpha
+  plo <- qbeta(0.025, alpha, beta)
+  phi <- qbeta(0.975, alpha, beta)
+  
+  pltdata <- data.frame(sens=x, ptrue=p0, pmeas=p, plo=plo, phi=phi)
+  
+  ggplot(pltdata, aes(x=sens)) +
+    geom_point(mapping=aes(y=pmeas), size=1.5, shape=8) +
+    geom_errorbar(mapping=aes(ymin=plo, ymax=phi), width=0.025) +
+    xlab('sensitivity') + ylab('PPV') +
+    theme_bw()
+```
+
+The perfsmooth function fits a nonincreasing smooth curve that fits the data as 
+well as possible.  The default is to use a polynomial up to degree 5.
+
+```{r}
+a5 <- perfsmooth(x, p, N)
+f5 <- function(x) {lserieseval(x, a5, c(0,1))}
+```
+
+The curve is a little distorted from the one used to simulate the data, due to the
+finite sampling effects, but the difference is relatively small.
+```{r}
+suppressWarnings(               # adding the color mapping to stat_function generates a warning
+ggplot(pltdata, aes(x=sens)) +
+  geom_point(mapping=aes(y=pmeas), size=1.5, shape=8) +
+  geom_errorbar(mapping=aes(ymin=plo, ymax=phi), width=0.025) +
+  stat_function(mapping=aes(color='fitted'), fun=f5, size=0.8) +
+  stat_function(mapping=aes(color='simulated'), fun=f0, size=0.5) +
+  xlab('sensitivity') + ylab('PPV') +
+  scale_color_manual(values=c(fitted='black', simulated='blue')) +
+  theme_bw()
+)
+```
+  
+We can use a higher order polynomial.  Here's what it looks like with degree 10.
+
+```{r}
+a10 <- perfsmooth(x, p, N, maxdegree = 10, itmax = 5000)
+f10 <- function(x) {lserieseval(x, a10, c(0,1))}
+```
+
+```{r}
+suppressWarnings(               # adding the color mapping to stat_function generates a warning
+ggplot(pltdata, aes(x=sens)) +
+  geom_point(mapping=aes(y=pmeas), size=1.5, shape=8) +
+  geom_errorbar(mapping=aes(ymin=plo, ymax=phi), width=0.025) +
+  stat_function(mapping=aes(color='degree = 5'), fun=f5) +
+  stat_function(mapping=aes(color='degree = 10'), fun=f10) +
+  xlab('sensitivity') + ylab('PPV') +
+  scale_color_manual(values=c(`degree = 5`='blue', `degree = 10`='magenta')) +
+  theme_bw()
+)
+```
+The higher order polynomials in the fit produce an oscillation that is probably
+not realistic.  The default setting seems to do a pretty good job of fitting the
+data, while suppressing unrealistic oscillations.
+
+## Effect of large N
+
+When N is very large, we get very tight error bars, which can hamper the algorithm.
+We limit the effective N to try to mitigate this.
+
+```{r}
+  x <- seq(0.01,1, 0.1)
+  N <- round(250000*x)
+  f0 <- function(x) {-0.6 * x^2 + 0.8}
+  p0 <- f0(x)
+  set.seed(867-5309)
+  p <- rbinom(length(N), N, p0) / N
+  
+  alpha <- p*N + 1
+  beta <- N+2-alpha
+  plo <- qbeta(0.025, alpha, beta)
+  phi <- qbeta(0.975, alpha, beta)
+```
+
+```{r}
+a5 <- perfsmooth(x, p, N)
+f5 <- function(x) {lserieseval(x, a5, c(0,1))}
+```
+
+```{r}
+pltdata <- data.frame(sens=x, ptrue=p0, pmeas=p, plo=plo, phi=phi)
+suppressWarnings(               # adding the color mapping to stat_function generates a warning
+ggplot(pltdata, aes(x=sens)) +
+  geom_point(mapping=aes(y=pmeas), size=1.5, shape=8) +
+  geom_errorbar(mapping=aes(ymin=plo, ymax=phi), width=0.025) +
+  stat_function(mapping=aes(color='fitted'), fun=f5, size=0.8) +
+  stat_function(mapping=aes(color='simulated'), fun=f0, size=0.5) +
+  xlab('sensitivity') + ylab('PPV') +
+  scale_color_manual(values=c(fitted='black', simulated='blue')) +
+  theme_bw()
+)
+```

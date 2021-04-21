@@ -9,7 +9,7 @@
 #' of observations.
 #'
 #' The intended use here is for a case where the x-values are a measure of
-#' algorithm selectivity (with 0 being highly selective and 1 being highly permissive),
+#' algorithm sensitivity (with 0 being highly selective and 1 being highly sensitive),
 #' and the y-values are PPV (or similar measure).  A more selective algorithm should
 #' generate fewer false positives, but with fewer cases, there is more uncertainty
 #' in the measured value.
@@ -23,14 +23,21 @@
 #' @param maxdegree Maximum degree to use in the Legendre series.  Must be <= 10.
 #' @param xinterval Domain of valid values for \code{x} (whether or not the entire
 #' interval is actually represented in the x values).  Default is [0,1].
+#' @param itmax Maximum number of iterations in the solver
 #' @return Vector of Legendre series coefficients.
 #' @export
-perfsmooth <- function(x, y, N, maxdegree = 5, xinterval = c(0,1))
+perfsmooth <- function(x, y, N, maxdegree = 5, xinterval = c(0,1), itmax = 2500)
 {
   stopifnot(maxdegree <= 10)
   stopifnot(maxdegree >= 1)
 
   stopifnot(length(x) == length(y) && length(y) == length(N))
+
+  ## Limit N to 5000 to avoid saturating the likelihood.  With very large N, you
+  ## risk getting a lot of likelihood values that are pinned at the largest negative
+  ## floating point value.  That makes it hard for the algorithm to find the right
+  ## direction.
+  N <- pmin(N, 5000)
 
   ## parameters of the beta distributions
   alpha <- 1 + y*N
@@ -47,6 +54,7 @@ perfsmooth <- function(x, y, N, maxdegree = 5, xinterval = c(0,1))
   opttarg <- function(lc) {
     yhat <- lserieseval(x, lc, xinterval)
     D <- -2*stats::dbeta(yhat, alpha, beta, log = TRUE)         # Deviance = -2*log(L)
+    D <- pmax(D, -.Machine$double.xmax)                         # Handle zero densities
 
     ## Now apply a penalty for nondecreasing values in yhat.
     dmax <- legendrederiv_extrema(lc)[2]
@@ -54,13 +62,18 @@ perfsmooth <- function(x, y, N, maxdegree = 5, xinterval = c(0,1))
     if(dmax > 0) sum(D) + basepenalty * dmax else sum(D)
   }
 
-  ## Optimize against the optimization target
+  ### Optimize against the optimization target
+  ## Initial guess will be a straight line going from the largest y-value to the smallest.
+  y0 <- max(y)
+  y1 <- min(y)
+  a <- 0.5*(y1+y0)
+  b <- 0.5*(y1-y0)
   initguess <- rep(0, maxdegree+1)
-  initguess[1:2] <- c(0.5, -0.5)         # initial guess is straight line with slope = -1
+  initguess[1:2] <- c(a, b)
 
   ## We could actually supply a gradient function for this optimization, but we'll
   ## wait to see if we really need it before we go down that road.
-  rslt <- stats::optim(initguess, opttarg, control=list(maxit=2500))
+  rslt <- stats::optim(initguess, opttarg, control=list(maxit=itmax))
 
   if(rslt$convergence != 0) {
     warning('Convergence failed with code ', rslt$convergence,

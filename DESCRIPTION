@@ -1,7 +1,7 @@
 Package: perfsmooth
 Type: Package
 Title: Fit smooth, monotonic curve to performance data
-Version: 0.1.0
+Version: 0.1.2
 Authors@R: 
     person(given = "Robert",
            family = "Link",
@@ -9,9 +9,9 @@ Authors@R:
            email = "rl8z@virginia.edu",
            comment = c(ORCID = "0000-0002-7071-248X"))
 Description: Given a set of empirical estimates of an algorithm's performance
-    (e.g., something like false negative rate) as a function of some measure
+    (e.g., something like positive predictive value) as a function of some measure
     of sensitivity, estimate a performance curve that enforces the constraint
-    that performance decreases as a function of sensitivity.
+    that performance decreases as sensitivity decreases.
 License: GPL-2
 Encoding: UTF-8
 LazyData: true

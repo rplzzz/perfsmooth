@@ -4,7 +4,7 @@
 \alias{perfsmooth}
 \title{Find an optimal monotonic performance curve.}
 \usage{
-perfsmooth(x, y, N, maxdegree = 5, xinterval = c(0, 1))
+perfsmooth(x, y, N, maxdegree = 5, xinterval = c(0, 1), itmax = 2500)
 }
 \arguments{
 \item{x}{x-values of control points.}
@@ -17,6 +17,8 @@ perfsmooth(x, y, N, maxdegree = 5, xinterval = c(0, 1))
 
 \item{xinterval}{Domain of valid values for \code{x} (whether or not the entire
 interval is actually represented in the x values).  Default is [0,1].}
+
+\item{itmax}{Maximum number of iterations in the solver}
 }
 \value{
 Vector of Legendre series coefficients.
@@ -32,7 +34,7 @@ values is therefore beta distributed with parameters derived from the number
 of observations.
 
 The intended use here is for a case where the x-values are a measure of
-algorithm selectivity (with 0 being highly selective and 1 being highly permissive),
+algorithm sensitivity (with 0 being highly selective and 1 being highly sensitive),
 and the y-values are PPV (or similar measure).  A more selective algorithm should
 generate fewer false positives, but with fewer cases, there is more uncertainty
 in the measured value.
