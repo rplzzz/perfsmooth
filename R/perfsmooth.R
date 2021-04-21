@@ -33,11 +33,30 @@ perfsmooth <- function(x, y, N, maxdegree = 5, xinterval = c(0,1), itmax = 2500)
 
   stopifnot(length(x) == length(y) && length(y) == length(N))
 
+  ## make sure x values are in order from low to high
+  iperm <- order(x)
+  x <- x[iperm]
+  y <- y[iperm]
+  N <- N[iperm]
+
   ## Limit N to 5000 to avoid saturating the likelihood.  With very large N, you
   ## risk getting a lot of likelihood values that are pinned at the largest negative
   ## floating point value.  That makes it hard for the algorithm to find the right
   ## direction.
   N <- pmin(N, 5000)
+
+  ## If the sensitivity scale doesn't go all the way up to the boundaries, add
+  ## dummy entries to regularize the behavior near the boundaries.
+  if(x[length(x)] < 1) {
+    x <- c(x, 1)
+    y <- c(y, y[length(y)])
+    N <- c(N, 1)
+  }
+  if(x[1] > 0) {
+    x <- c(0, x)
+    y <- c(y[1], y)
+    N <- c(1, N)
+  }
 
   ## parameters of the beta distributions
   alpha <- 1 + y*N

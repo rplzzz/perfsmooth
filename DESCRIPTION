@@ -1,7 +1,7 @@
 Package: perfsmooth
 Type: Package
 Title: Fit smooth, monotonic curve to performance data
-Version: 0.1.2
+Version: 0.1.3
 Authors@R: 
     person(given = "Robert",
            family = "Link",
